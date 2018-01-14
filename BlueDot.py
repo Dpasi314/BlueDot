@@ -1,38 +1,22 @@
 import cv2, sys, getopt, numpy as np
+import ImageUtils as imu
 from scipy import ndimage
-def reduce_image(image, t=0):
-    w, h, _ = image.shape
-    for i in range(w):
-        for j in range(h):
-            colors = image[i][j]
-            if(t == 0):
-                image[i][j] = (colors[0], 0, 0) #BGR... seriously?
-            elif(t == 1):
-                image[i][j] = (0, colors[1], 0)
-    return image
 
-def find_contours(image, blur=False):
-    edged = cv2.Canny(image, 25, 175)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1,1))
-    closed = cv2.morphologyEx(edged, cv2.MORPH_DILATE, kernel)
+
+def find_actin_contours(image):
+    edged = cv2.Canny(image, 0, 120)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50,50)) # (25,25) is better for Green Areas
+    closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return (image, contours)
 
-def find_stress_fiber_region(image):
-    green_range = ([0, 0, 0], [75, 255, 75])
-
-def overlay(original, contours, show=True):
-    id_c = 0
-    for c in contours:
-        area = cv2.contourArea(c)
-        print("Area:{0} ID: {1}".format(area, id_c))
-        if(area > 10):
-            (x, y, w, h) = cv2.boundingRect(c)
-            cv2.rectangle(original, (x, y), (x+w+2, y+h+2), (0, 255, 0), 2)
-            cv2.putText(original, str(id_c), (x-5, y-5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, 255)
-            id_c += 1
-    cv2.imshow("Image", original)
-    cv2.waitKey(0)
+def find_cell_contours(image):
+    edged = cv2.Canny(image, 25, 175)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,1)) # (25,25) is better for Green Areas
+    #closed = cv2.morphologyEx(edged, cv2.MORPH_CROSS, kernel)
+    closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
+    image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return (image, contours)
 
 def main(argv):
     argc = len(argv)
@@ -44,20 +28,22 @@ def main(argv):
     if '.png' not in image_file:
         print("\nError: Invalid Image Type")
         return -1
+
     image = cv2.imread(image_file)
     original = image.copy()
-    image_cells = reduce_image(image.copy(), t=0)
-    image_actin = reduce_image(image.copy(), t=1)
 
-    (image_cells, contours_cells) = find_contours(image_cells)
-    (image_actin, contours_actin) = find_contours(image_actin, blur=True)
+    image_cells = imu.reduce_image(image.copy(), imu.Color.B)
+    image_actin = imu.reduce_image(image.copy(), imu.Color.G)
 
-    overlay(original.copy(), contours_cells)
-    overlay(original.copy(), contours_actin)
-    
+    (image_cells, contours_cells) = find_cell_contours(image_cells)
+    (image_actin, contours_actin) = find_actin_contours(image_actin)
+
+    image_cells = imu.overlay(original, contours_cells, imu.Item.Cells)
+    image_actin = imu.overlay(original, contours_actin, imu.Item.Actin)
+    imu.display(image_cells)
+    imu.display(image_actin)
 
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
