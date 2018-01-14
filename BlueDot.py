@@ -4,16 +4,16 @@ from scipy import ndimage
 
 
 def find_actin_contours(image):
-    edged = cv2.Canny(image, 0, 120)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50,50)) # (25,25) is better for Green Areas
+    edged = cv2.Canny(image, 25, 120)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (75, 75))
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    imu.display(image)
     return (image, contours)
 
 def find_cell_contours(image):
     edged = cv2.Canny(image, 25, 175)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,1)) # (25,25) is better for Green Areas
-    #closed = cv2.morphologyEx(edged, cv2.MORPH_CROSS, kernel)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2,1)) # (25,25) is better for Green Areas
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return (image, contours)
@@ -39,10 +39,10 @@ def main(argv):
     (image_actin, contours_actin) = find_actin_contours(image_actin)
 
     image_cells = imu.overlay(original, contours_cells, imu.Item.Cells)
-    image_actin = imu.overlay(original, contours_actin, imu.Item.Actin)
+    image_actin = imu.overlay(original, contours_actin, imu.Item.Actin, area_threshold=500)
+
     imu.display(image_cells)
     imu.display(image_actin)
-
     return 0
 
 if __name__ == "__main__":

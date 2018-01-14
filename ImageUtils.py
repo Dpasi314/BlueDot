@@ -9,8 +9,12 @@ class Item(Enum):
     Cells = 0
     Actin = 1
 
-def reduce_image(image_original, color):
-    image = image_original.copy()
+def reduce_image(image_original, color, copy=False):
+    image = None
+    if(copy):
+        image = image_original.copy()
+    else:
+        image = image_original
     w, h, _ = image.shape
     pixel_color = None
     if(color == Color.R):
@@ -46,16 +50,18 @@ def overlay(image_original, contours, item, id_items=True, area_threshold=10):
     else:
         for cnt in contours:
             contour_area = cv2.contourArea(cnt)
-            if(contour_area > area_threshold):
+            if(contour_area < area_threshold):
                 (x, y, w, h) = cv2.boundingRect(cnt)
-                cv2.rectangle(image, (x, y), (w, h), outline_color, outline_width)
-                cv2.putText(image, str(contour_id), (x - 25, y - 25), font, 1, 255)
+                cv2.rectangle(image, (int(x), int(y)), (int(w), int(h)), outline_color, outline_width)
+                cv2.putText(image, str(contour_id), (int(x) - 25, int(y) - 25), font, 1, 255)
                 contour_id += 1
+
     return image
 
 def display(image, title="Image"):
     cv2.imshow(title, image)
     cv2.waitKey(0)
+    cv2.destroyWindow(title)
 
 
 
