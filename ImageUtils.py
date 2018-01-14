@@ -43,17 +43,19 @@ def overlay(image_original, contours, item, id_items=True, area_threshold=10):
             contour_area = cv2.contourArea(cnt)
             if(contour_area > area_threshold):
                 (x, y), r = cv2.minEnclosingCircle(cnt)
-                cv2.circle(image, (int(x), int(y)), int(r), outline_color, outline_width)
-                cv2.putText(image, str(contour_id), (int(x) - 25, int(y) - 25), font, 1, 255)
+                x, y, r = int(x), int(y), int(r)
+                cv2.circle(image, (x, y), r, outline_color, outline_width)
+                cv2.putText(image, str(contour_id), (x - 25, y - 25), font, 1, 255)
                 contour_id += 1
 
     else:
         for cnt in contours:
             contour_area = cv2.contourArea(cnt)
-            if(contour_area < area_threshold):
+            if(contour_area > area_threshold):
                 (x, y, w, h) = cv2.boundingRect(cnt)
-                cv2.rectangle(image, (int(x), int(y)), (int(w), int(h)), outline_color, outline_width)
-                cv2.putText(image, str(contour_id), (int(x) - 25, int(y) - 25), font, 1, 255)
+                x, y, w, h = int(x), int(y), int(w), int(h)
+                cv2.rectangle(image, (x, y), (x+w, y+h), outline_color, outline_width)
+                cv2.putText(image, str(contour_id), (x - 25, y - 25), font, 1, 255)
                 contour_id += 1
 
     return image

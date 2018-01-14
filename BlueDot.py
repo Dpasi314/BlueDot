@@ -4,8 +4,8 @@ from scipy import ndimage
 
 
 def find_actin_contours(image):
-    edged = cv2.Canny(image, 25, 120)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (75, 75))
+    edged = cv2.Canny(image, 0, 150)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (60, 60))
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     imu.display(image)
