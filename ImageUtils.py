@@ -17,6 +17,8 @@ def reduce_image(image_original, color, copy=False):
         image = image_original
     w, h, _ = image.shape
     pixel_color = None
+    reduced_color = (0, 0, 0) #BGR
+        
     if(color == Color.R):
         for i in range(w):
             for j in range(h):

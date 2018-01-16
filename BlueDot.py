@@ -5,7 +5,7 @@ from scipy import ndimage
 
 def find_actin_contours(image):
     edged = cv2.Canny(image, 0, 150)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (60, 60))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (60, 60)
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     imu.display(image)
@@ -13,11 +13,25 @@ def find_actin_contours(image):
 
 def find_cell_contours(image):
     edged = cv2.Canny(image, 25, 175)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2,1)) # (25,25) is better for Green Areas
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2,1))
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     image, contours, _ = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return (image, contours)
 
+def calculate_percentage_actin(cell_contours, actin_contours):
+    inside = 0
+    total = 0
+    for cnt_cell in cell_contours:
+        total += 1
+        for cnt_actin in actin_contours:
+            (x_cell, y_cell), _ = cv2.minEnclosingCircle(cnt_cell)
+            (x, y, w, h) = cv2.boundingRect(cnt_actin)
+            if(x_cell >= x and x_cell <= x+w):
+                if(y_cell >= y and y_cell <= y+h):
+                    inside += 1
+    return (inside/total) * 100
+
+            
 def main(argv):
     argc = len(argv)
     if(argc < 1):
@@ -43,6 +57,9 @@ def main(argv):
 
     imu.display(image_cells)
     imu.display(image_actin)
+
+    print(calculate_percentage_actin(contours_cells, contours_actin))
+
     return 0
 
 if __name__ == "__main__":
